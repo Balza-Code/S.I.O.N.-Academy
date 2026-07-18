@@ -1,6 +1,6 @@
 'use client';
 
-import { registrarUsuarioAction } from "@/app/actions";
+import { registerAction } from "@/app/actions/auth";
 import { useState } from "react";
 
 interface FormularioRegistroProps {
@@ -8,7 +8,7 @@ interface FormularioRegistroProps {
 }
 
 export default function FormularioRegistro({ iglesias }: FormularioRegistroProps){
-  const [errores, setErrores] = useState<Record<string, string[]>>({});
+  const [errores, setErrores] = useState<Record<string, string[] | undefined>>({});
   const [cargando, setCargando] = useState(false);
   const [exito, setExito] = useState(false);
 
@@ -19,12 +19,32 @@ export default function FormularioRegistro({ iglesias }: FormularioRegistroProps
     setExito(false);
 
     const formData = new FormData(event.currentTarget);
-    const resultado = await registrarUsuarioAction(formData);
+    const rolValue = formData.get('rol')?.toString();
+      if (!rolValue || !['ADMIN', 'LIDER', 'APRENDIZ'].includes(rolValue)) {
+      setErrores({ rol: ['Rol inválido'] });
+      setCargando(false);
+      return;
+    } 
+    
+    const valores = {
+    nombre: formData.get('nombre')?.toString() ?? '',
+    email: formData.get('email')?.toString() ?? '',
+    password: formData.get('password')?.toString() ?? '',
+    confirmPassword: formData.get('confirmPassword')?.toString() ?? '',
+    rol: rolValue as 'ADMIN' | 'LIDER' | 'APRENDIZ',
+    organizacionId: formData.get('organizacionId')?.toString() ?? '',
+  };
+    const resultado = await registerAction(valores);
 
     setCargando(false);
 
     if (!resultado.success){
-      setErrores(resultado.errors || {});
+      if ('errors' in resultado){ 
+        setErrores(resultado.errors || {});
+      } else { 
+        console.error(resultado.message);
+        setErrores({})
+      }
     } else {
       setExito(true);
       (event.target as HTMLFormElement).reset()

@@ -1,7 +1,6 @@
 import { db } from '@/db';
 import { usuarios, organizaciones, cursos } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import FormularioRegistro from '@/components/FormularioRegistro';
 import Link from 'next/link'
 
 export default async function HomePage() {
@@ -20,7 +19,6 @@ export default async function HomePage() {
   // 2. Consultamos los cursos disponibles para el LMS
   const listaCursos = await db.select().from(cursos);
 
-  const listaIglesias = await db.select({ id: organizaciones.id, nombre: organizaciones.nombre}).from(organizaciones);
 
   return (
     <main className="min-h-screen bg-[#1a1a1a] text-[#f4f0e6] p-8">
@@ -72,9 +70,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="py-6 border-t border-[#333]">
-          <FormularioRegistro iglesias={listaIglesias} />
-        </section>
+       
 
         {/* SECCIÓN 2: CONTROL DE ALUMNOS */}
         <section className="space-y-6">
