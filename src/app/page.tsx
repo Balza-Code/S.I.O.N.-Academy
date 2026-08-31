@@ -1,115 +1,86 @@
-import { db } from '@/db';
-import { usuarios, organizaciones, cursos } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import Link from 'next/link'
+import Link from 'next/link';
+import { obtenerSesion } from '@/lib/sessions';
+// Feed moved to dashboard; keep landing minimal for now
 
 export default async function HomePage() {
-  // 1. Consultamos los músicos con sus iglesias (El JOIN que ya tenías)
-  const musicos = await db
-    .select({
-      id: usuarios.id,
-      nombre: usuarios.nombre,
-      rol: usuarios.rol,
-      iglesia: organizaciones.nombre,
-      estado: organizaciones.estado,
-    })
-    .from(usuarios)
-    .leftJoin(organizaciones, eq(usuarios.organizacionId, organizaciones.id));
-
-  // 2. Consultamos los cursos disponibles para el LMS
-  const listaCursos = await db.select().from(cursos);
-
+  const sesion = await obtenerSesion();
 
   return (
-    <main className="min-h-screen bg-[#1a1a1a] text-[#f4f0e6] p-8">
-      <div className="max-w-6xl mx-auto space-y-12">
-        
-        {/* CABECERA PRINCIPAL */}
-        <header className="border-b border-[#c4a484]/20 pb-6">
-          <h1 className="text-4xl font-bold tracking-tight text-[#c4a484]">
-            Academia S.I.O.N.
-          </h1>
-          <p className="text-sm text-[#a8a8a8] font-mono mt-2">
-            SISTEMA ÍNTEGRO DE ORQUESTACIÓN Y NIVELACIÓN
-          </p>
-        </header>
+    <main className="min-h-screen bg-[#1a1a1a] text-[#f4f0e6]">
+      <nav className="max-w-6xl mx-auto flex items-center justify-between p-6">
+        <h1 className="text-2xl font-bold text-[#c4a484]">Academia S.I.O.N.</h1>
+        <div className="space-x-3">
+          {sesion ? (
+            <Link href="/dashboard" className="bg-[#c4a484] text-[#1a1a1a] px-4 py-2 rounded-md font-bold">Ir a mi Dashboard</Link>
+          ) : (
+            <>
+              <Link href="/login" className="px-4 py-2 rounded-md border border-[#c4a484]/20">Iniciar Sesión</Link>
+              <Link href="/registro" className="bg-[#c4a484] text-[#1a1a1a] px-4 py-2 rounded-md font-bold">Comenzar Ahora</Link>
+            </>
+          )}
+        </div>
+      </nav>
 
-        {/* SECCIÓN 1: SECCIÓN ACADÉMICA (LMS) */}
-        <section className="space-y-6">
-          <div className="border-l-4 border-[#c4a484] pl-4">
-            <h2 className="text-2xl font-bold text-[#e4e1d9]">Rutas de Nivelación Disponibles</h2>
-            <p className="text-sm text-[#a8a8a8]">Explora los programas de formación técnica y espiritual</p>
-          </div>
+      <section className="max-w-4xl mx-auto p-8 text-center">
+        <h2 className="text-4xl font-extrabold text-[#e4e1d9]">Bienvenido a Academia S.I.O.N.</h2>
+        <p className="mt-4 text-[#a8a8a8]">Plataforma de formación y nivelación musical.</p>
+        <div className="mt-8">
+          {sesion ? (
+            <Link href="/dashboard" className="bg-[#c4a484] text-[#1a1a1a] px-6 py-3 rounded-lg font-bold">Ir a mi Dashboard</Link>
+          ) : (
+            <div className="flex items-center justify-center gap-4">
+              <Link href="/login" className="px-6 py-3 rounded-lg border border-[#c4a484]/20">Iniciar Sesión</Link>
+              <Link href="/registro" className="bg-[#c4a484] text-[#1a1a1a] px-6 py-3 rounded-lg font-bold">Comenzar Ahora</Link>
+            </div>
+          )}
+        </div>
+      </section>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {listaCursos.map((curso) => (
-              <div 
-                key={curso.id}
-                className="bg-[#242424] rounded-2xl p-6 border border-[#c4a484]/10 flex flex-col justify-between hover:shadow-xl hover:shadow-black/30 transition-all"
-              >
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-mono bg-[#c4a484]/10 text-[#c4a484] px-3 py-1 rounded-full font-bold uppercase">
-                      🎸 {curso.instrumento}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-[#f4f0e6] mb-2">{curso.titulo}</h3>
-                  <p className="text-sm text-[#b5b5b5] line-clamp-3 leading-relaxed">
-                    {curso.descripcion}
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-[#333] flex justify-between items-center">
-                  <span className="text-xs text-[#a8a8a8]">Plan de estudio premium</span>
-                  <Link href={`/cursos/${curso.id}`} className="bg-[#c4a484] text-[#1a1a1a] text-xs font-bold px-4 py-2 rounded-lg hover:bg-[#b39374] transition-colors">
-                    Ver Lecciones
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-       
-
-        {/* SECCIÓN 2: CONTROL DE ALUMNOS */}
-        <section className="space-y-6">
-          <div className="border-l-4 border-blue-500 pl-4">
-            <h2 className="text-2xl font-bold text-[#e4e1d9]">Músicos de la Red</h2>
-            <p className="text-sm text-[#a8a8a8]">Miembros activos y niveles de acceso asignados</p>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {musicos.map((musico) => (
-              <div 
-                key={musico.id} 
-                className="bg-[#242424]/60 p-5 rounded-xl border border-[#c4a484]/5 flex flex-col justify-between"
-              >
-                <div className="flex justify-between items-start gap-2">
-                  <div>
-                    <h3 className="font-bold text-[#f4f0e6]">{musico.nombre}</h3>
-                    <p className="text-xs text-[#b5b5b5] mt-1">
-                      ⛪ {musico.iglesia || 'Sin Iglesia'}
-                    </p>
-                    <p className="text-[10px] text-[#a8a8a8] uppercase font-mono mt-0.5">
-                      📍 {musico.estado || 'N/A'}
-                    </p>
-                  </div>
-                  
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold whitespace-nowrap ${
-                    musico.rol === 'ADMIN' ? 'bg-[#c4a484]/20 text-[#c4a484]' :
-                    musico.rol === 'LIDER' ? 'bg-blue-500/20 text-blue-400' :
-                    'bg-emerald-500/20 text-emerald-400'
-                  }`}>
-                    {musico.rol}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-      </div>
+      {/* Feed de evidencias recientes */}
+      <section className="max-w-6xl mx-auto p-8">
+        <h3 className="text-2xl font-bold text-[#e4e1d9] mb-4">Feed - Evidencias recientes</h3>
+        <div className="space-y-6">
+          {/* Server-side fetch: últimas 10 evidencias activas */}
+          {/** fetch data inside component render */}
+          <RecentEvidencias />
+        </div>
+      </section>
     </main>
+  );
+}
+
+async function RecentEvidencias() {
+  const items = await db
+    .select()
+    .from(evidenciasLeccion)
+    .where(evidenciasLeccion.activo.equals(1))
+    .orderBy(desc(evidenciasLeccion.createdAt))
+    .limit(10);
+
+  const userIds = Array.from(new Set(items.map((i) => i.usuarioId))).filter(Boolean) as number[];
+  const users = userIds.length > 0
+    ? await db.select().from(usuarios).where(inArray(usuarios.id, userIds))
+    : [];
+  const usersById = new Map(users.map((u) => [u.id, u]));
+
+  if (items.length === 0) {
+    return <div className="text-sm text-[#a8a8a8]">Aún no hay evidencias públicas.</div>;
+  }
+
+  return (
+    <div className="grid md:grid-cols-2 gap-6">
+      {items.map((ev) => (
+        <article key={ev.id} className="bg-[#1f1f1f] p-4 rounded-lg border border-[#333]">
+          <div className="aspect-video mb-3 rounded overflow-hidden">
+            <iframe src={ev.videoUrl} width="100%" height="100%" frameBorder="0" allowFullScreen />
+          </div>
+          <p className="text-sm text-[#b5b5b5] mb-2">{ev.descripcion ?? 'Sin descripción'}</p>
+          <div className="flex items-center justify-between text-sm text-[#a8a8a8]">
+            <span>Por: {usersById.get(ev.usuarioId)?.nombre ?? `Usuario ${ev.usuarioId}`}</span>
+            <span>{new Date(ev.createdAt).toLocaleString()}</span>
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }
