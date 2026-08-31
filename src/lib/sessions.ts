@@ -2,10 +2,10 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'clave_super_secreta'
+  process.env.JWT_SECRET || 'clave_secreta_super_segura_para_academia_sion_2026'
 );
 
-const COOKIE_NAME = ' sion-session';
+const COOKIE_NAME = 'sion-session';
 
 export interface SessionPayload {
   userId: number;

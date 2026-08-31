@@ -4,6 +4,7 @@ import { startTransition, useState, useTransition } from "react";
 import { loginAction } from '@/app/actions/auth';
 import { LoginInput, loginSchema } from "@/types/auth.schema";
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginForm() {
   
@@ -13,6 +14,8 @@ export default function LoginForm() {
   const [isPending, setIsPending] = useTransition()
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectToParam = searchParams?.get('redirectTo') ?? null;
 
 
   async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
@@ -39,8 +42,9 @@ export default function LoginForm() {
 
     
     if(res.success){
+      const destino = redirectToParam || '/dashboard';
       startTransition(() => {
-        router.push('/'); 
+        router.push(destino);
         router.refresh();
       })
     } else if (!res.success){

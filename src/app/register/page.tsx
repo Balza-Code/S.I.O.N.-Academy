@@ -5,7 +5,9 @@ import { db } from '@/db'
 
 // Esta es la forma correcta: una función que retorna el componente
 export default async function RegisterPage() {
-const listaOrganizaciones = await db.select().from(organizaciones);  
+  const listaOrganizaciones = await db
+    .select({ id: organizaciones.id, nombre: organizaciones.nombre, estado: organizaciones.estado })
+    .from(organizaciones);
   return (
     <main className="flex min-h-screen flex-col items-center justify-center">
       <h1>Registrate</h1>
