@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import { organizaciones, usuarios, cursos, lecciones } from './schema';
+import { organizaciones, usuarios, cursos, lecciones, evidenciasLeccion, comentariosEvidencia, reaccionesEvidencia } from './schema';
 
 // Cargamos el .env.local de forma ultra segura para Windows
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -40,7 +40,7 @@ async function main() {
 
   // 2. Insertar Usuarios
   console.log('👥 Insertando usuarios...');
-  await db.insert(usuarios).values([
+  const [adminUser, liderUser, aprendizUser] = await db.insert(usuarios).values([
     {
       nombre: 'Cristian Balza',
       email: 'cristian@sion.com',
@@ -62,7 +62,7 @@ async function main() {
       rol: 'APRENDIZ',
       organizacionId: orgKm8.id
     }
-  ]);
+  ]).returning({ id: usuarios.id });
 
   // 3. Insertar Cursos (La columna instrumento ayuda a segmentar las rutas)
   console.log('🎸 Insertando cursos académicos...');
@@ -81,7 +81,7 @@ async function main() {
 
   // 4. Insertar Lecciones indexadas por Curso
   console.log('📖 Insertando lecciones de nivelación...');
-  await db.insert(lecciones).values([
+  const [guitarraL1, guitarraL2, pianoL1, pianoL2] = await db.insert(lecciones).values([
     // Lecciones de Guitarra
     {
       titulo: 'Postura, Afinación y Primeros Acordes (G, C, D)',
@@ -111,6 +111,71 @@ async function main() {
       orden: 2,
       cursoId: cursoPiano.id,
       videoUrl: 'https://www.youtube.com/embed/ejemplo_video_4'
+    }
+  ]).returning({ id: lecciones.id });
+  
+  
+
+  // 5. Insertar evidencias de lección de ejemplo
+  console.log('🎞️ Insertando evidencias de lección...');
+  // Asegurar que las tablas sociales existen (creación ligera para entornos locales)
+  await client`
+    CREATE TABLE IF NOT EXISTS evidencias_leccion (
+      id serial PRIMARY KEY,
+      usuario_id integer NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      leccion_id integer NOT NULL REFERENCES lecciones(id) ON DELETE CASCADE,
+      video_url text NOT NULL,
+      descripcion text,
+      activo integer NOT NULL DEFAULT 1,
+      created_at timestamp without time zone DEFAULT now()
+    );
+  `;
+
+  await client`
+    CREATE TABLE IF NOT EXISTS comentarios_evidencia (
+      id serial PRIMARY KEY,
+      evidencia_id integer NOT NULL REFERENCES evidencias_leccion(id) ON DELETE CASCADE,
+      usuario_id integer NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      contenido text NOT NULL,
+      created_at timestamp without time zone DEFAULT now()
+    );
+  `;
+
+  await client`
+    CREATE TABLE IF NOT EXISTS reacciones_evidencia (
+      evidencia_id integer NOT NULL REFERENCES evidencias_leccion(id) ON DELETE CASCADE,
+      usuario_id integer NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      tipo text NOT NULL,
+      created_at timestamp without time zone DEFAULT now(),
+      PRIMARY KEY (evidencia_id, usuario_id)
+    );
+  `;
+  const [evidencia1] = await db.insert(evidenciasLeccion).values([
+    {
+      usuarioId: aprendizUser.id,
+      leccionId: guitarraL1.id,
+      videoUrl: 'https://www.youtube.com/watch?v=ejemplo_evidencia_1',
+      descripcion: 'Ejecución de práctica - Primeros acordes en G'
+    }
+  ]).returning();
+
+  // 6. Insertar un comentario de ejemplo por un LIDER
+  console.log('💬 Insertando comentarios...');
+  await db.insert(comentariosEvidencia).values([
+    {
+      evidenciaId: evidencia1.id,
+      usuarioId: liderUser.id,
+      contenido: 'Buen progreso, trabaja la posición del pulgar en la mano derecha.'
+    }
+  ]);
+
+  // 7. Insertar una reacción de ejemplo por un ADMIN
+  console.log('👏 Insertando reacciones...');
+  await db.insert(reaccionesEvidencia).values([
+    {
+      evidenciaId: evidencia1.id,
+      usuarioId: adminUser.id,
+      tipo: 'LIKE'
     }
   ]);
 

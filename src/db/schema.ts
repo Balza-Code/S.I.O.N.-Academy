@@ -15,6 +15,36 @@ export const organizaciones = pgTable('organizaciones', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// 7. Tabla de evidencias de lección (videos subidos por aprendices)
+export const evidenciasLeccion = pgTable('evidencias_leccion', {
+  id: serial('id').primaryKey(),
+  usuarioId: integer('usuario_id').references(() => usuarios.id, { onDelete: 'cascade' }).notNull(),
+  leccionId: integer('leccion_id').references(() => lecciones.id, { onDelete: 'cascade' }).notNull(),
+  videoUrl: text('video_url').notNull(),
+  descripcion: text('descripcion'),
+  activo: integer('activo').default(1).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// 8. Tabla de comentarios sobre las evidencias
+export const comentariosEvidencia = pgTable('comentarios_evidencia', {
+  id: serial('id').primaryKey(),
+  evidenciaId: integer('evidencia_id').references(() => evidenciasLeccion.id, { onDelete: 'cascade' }).notNull(),
+  usuarioId: integer('usuario_id').references(() => usuarios.id, { onDelete: 'cascade' }).notNull(),
+  contenido: text('contenido').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// 9. Tabla de reacciones (un usuario puede reaccionar una vez por evidencia)
+export const reaccionesEvidencia = pgTable('reacciones_evidencia', {
+  evidenciaId: integer('evidencia_id').references(() => evidenciasLeccion.id, { onDelete: 'cascade' }).notNull(),
+  usuarioId: integer('usuario_id').references(() => usuarios.id, { onDelete: 'cascade' }).notNull(),
+  tipo: text('tipo').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (t) => [
+  primaryKey({ columns: [t.evidenciaId, t.usuarioId] }),
+]);
+
 // 3. Tabla de usuarios
 export const usuarios = pgTable('usuarios', {
   id: serial('id').primaryKey(),
