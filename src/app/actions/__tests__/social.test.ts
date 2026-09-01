@@ -16,13 +16,29 @@ vi.mock('@/db/schema', () => ({
 }));
 
 vi.mock('@/types/social.schema', () => ({
-  subirEvidenciaSchema: { parse: (x: any) => x },
-  comentarEvidenciaSchema: { parse: (x: any) => x },
-  reaccionEvidenciaSchema: { parse: (x: any) => x },
+  subirEvidenciaSchema: {
+    safeParse: (x: any) => {
+      if (!x || typeof x.videoUrl !== 'string' || !x.videoUrl.startsWith('http')) {
+        return { success: false, error: { flatten: () => ({ fieldErrors: { videoUrl: ['Invalid url'] } }) } };
+      }
+      return { success: true, data: x };
+    },
+  },
+  comentarEvidenciaSchema: {
+    safeParse: (x: any) => {
+      if (!x || typeof x.contenido !== 'string' || x.contenido.trim() === '') {
+        return { success: false, error: { flatten: () => ({ fieldErrors: { contenido: ['Required'] } }) } };
+      }
+      return { success: true, data: x };
+    },
+  },
+  reaccionEvidenciaSchema: {
+    safeParse: (x: any) => ({ success: true, data: x }),
+  },
 }));
 
 vi.mock('@/lib/actionHelpers', () => ({
-  runActionResponse: (fn: any) => fn,
+  runActionResponse: (fn: any) => fn(),
   runWithTimeout: async (p: any) => p,
 }));
 
