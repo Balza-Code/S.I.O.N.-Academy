@@ -13,10 +13,11 @@ export async function getRedis() {
     // @ts-ignore
     client = new mod.Redis({ url, token });
     return client;
-  } catch (err) {
+  } catch (err: unknown) {
     // Not fatal; fall back to in-memory limiter
     // eslint-disable-next-line no-console
-    console.warn('Upstash Redis client not available:', err?.message || err);
+    const message = err instanceof Error ? err.message : 'Redis unavailable';
+    console.warn('Upstash Redis client not available:', message);
     return undefined;
   }
 }

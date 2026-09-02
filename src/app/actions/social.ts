@@ -8,10 +8,24 @@ import { revalidatePath } from 'next/cache';
 import { consumeRateLimit, checkIdempotency } from '@/lib/rateLimiter';
 import type { ActionResponse } from '@/types/api';
 
-export async function subirEvidenciaAction(payload: unknown) {
+function normalizeFormData(payload: FormData | unknown): Record<string, unknown> {
+  if (payload instanceof FormData) {
+    return Object.fromEntries(payload.entries());
+  }
+
+  if (payload && typeof payload === 'object') {
+    return payload as Record<string, unknown>;
+  }
+
+  return {};
+}
+
+export async function subirEvidenciaAction(payload: FormData | unknown) {
+  const normalized = normalizeFormData(payload);
+
   return runActionResponse<{ evidenciaId: number }>(async () => {
     try {
-      const parsed = subirEvidenciaSchema.safeParse(payload);
+      const parsed = subirEvidenciaSchema.safeParse(normalized);
       if (!parsed.success) {
         const fieldErrors = parsed.error.flatten().fieldErrors ?? {};
         return { success: false, errors: fieldErrors, message: 'Entrada inválida' } as ActionResponse<{ evidenciaId: number }>;
@@ -19,8 +33,7 @@ export async function subirEvidenciaAction(payload: unknown) {
 
       const session = await requireSession();
 
-      // Idempotency: optional idempotencyKey in payload
-      const idempotencyKey = (payload as unknown as { idempotencyKey?: string }).idempotencyKey;
+      const idempotencyKey = (normalized as { idempotencyKey?: string }).idempotencyKey;
       if (!(await checkIdempotency(session.userId, idempotencyKey))) {
         return { success: true, data: { evidenciaId: -1 } } as ActionResponse<{ evidenciaId: number }>;
       }
@@ -47,10 +60,12 @@ export async function subirEvidenciaAction(payload: unknown) {
   });
 }
 
-export async function comentarEvidenciaAction(payload: unknown) {
+export async function comentarEvidenciaAction(payload: FormData | unknown) {
+  const normalized = normalizeFormData(payload);
+
   return runActionResponse<{ comentarioId: number }>(async () => {
     try {
-      const parsed = comentarEvidenciaSchema.safeParse(payload);
+      const parsed = comentarEvidenciaSchema.safeParse(normalized);
       if (!parsed.success) {
         const fieldErrors = parsed.error.flatten().fieldErrors ?? {};
         return { success: false, errors: fieldErrors, message: 'Entrada inválida' } as ActionResponse<{ comentarioId: number }>;
@@ -78,10 +93,12 @@ export async function comentarEvidenciaAction(payload: unknown) {
   });
 }
 
-export async function reaccionEvidenciaAction(payload: unknown) {
+export async function reaccionEvidenciaAction(payload: FormData | unknown) {
+  const normalized = normalizeFormData(payload);
+
   return runActionResponse<{ ok: boolean }>(async () => {
     try {
-      const parsed = reaccionEvidenciaSchema.safeParse(payload);
+      const parsed = reaccionEvidenciaSchema.safeParse(normalized);
       if (!parsed.success) {
         const fieldErrors = parsed.error.flatten().fieldErrors ?? {};
         return { success: false, errors: fieldErrors, message: 'Entrada inválida' } as ActionResponse<{ ok: boolean }>;
@@ -94,25 +111,23 @@ export async function reaccionEvidenciaAction(payload: unknown) {
         return { success: false, errors: {}, message: 'Límite de reacciones alcanzado. Intenta más tarde.' } as ActionResponse<{ ok: boolean }>;
       }
 
-      // Upsert-like behavior: try insert, if conflict do nothing
-      const insertQuery: unknown = db.insert(reaccionesEvidencia).values({
+      // Upsert-like behavior: try insert, if conflict do nothing.
+      // Cast through unknown to satisfy both Drizzle's real insert builder and the lightweight test mocks.
+      const insertQuery = db.insert(reaccionesEvidencia).values({
         evidenciaId: parsed.data.evidenciaId,
         usuarioId: session.userId,
         tipo: parsed.data.tipo,
-      });
+      }) as unknown as {
+        onConflictDoNothing?: (opts: { target: readonly unknown[] }) => Promise<unknown>;
+        returning?: () => Promise<unknown>;
+      };
 
-      // Support real DB builder and lightweight test mocks
-      // If the builder has `onConflictDoNothing`, call it; otherwise try `returning`, or just await the object.
-      // @ts-ignore - runtime shape checks follow
-      if (typeof insertQuery?.onConflictDoNothing === 'function') {
-        // @ts-ignore
-        await insertQuery.onConflictDoNothing({ target: [reaccionesEvidencia.evidenciaId, reaccionesEvidencia.usuarioId] });
-      } else if (typeof insertQuery?.returning === 'function') {
-        // @ts-ignore
+      if (typeof insertQuery.onConflictDoNothing === 'function') {
+        await insertQuery.onConflictDoNothing({
+          target: [reaccionesEvidencia.evidenciaId, reaccionesEvidencia.usuarioId],
+        });
+      } else if (typeof insertQuery.returning === 'function') {
         await insertQuery.returning();
-      } else {
-        // best-effort: if it's a promise-like, await; otherwise noop
-        try { await (insertQuery as Promise<unknown>); } catch (_) {}
       }
 
       try { revalidatePath('/'); } catch (e: unknown) {}

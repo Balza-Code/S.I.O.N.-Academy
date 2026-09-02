@@ -1,4 +1,7 @@
 import { obtenerSesion, SessionPayload } from './sessions';
+import { db } from '@/db';
+import { usuarios } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export class HttpError extends Error {
   status: number;
@@ -17,8 +20,14 @@ export async function requireSession(): Promise<SessionPayload> {
 
 export async function requireRole(roles: string[] = []): Promise<SessionPayload> {
   const sesion = await requireSession();
-  if (!roles.includes(sesion.rol)) {
+  const [usuario] = await db
+    .select({ rol: usuarios.rol })
+    .from(usuarios)
+    .where(eq(usuarios.id, sesion.userId));
+
+  if (!usuario || !roles.includes(usuario.rol)) {
     throw new HttpError('Forbidden', 403);
   }
-  return sesion;
+
+  return { ...sesion, rol: usuario.rol };
 }
