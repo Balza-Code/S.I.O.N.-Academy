@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ACTIONS_DIR = path.resolve(__dirname, '..', 'src', 'app', 'actions');
-const TARGET_TABLES = ['cursos', 'organizaciones', 'usuarios'];
+const TARGET_TABLES = ['cursos', 'lecciones', 'organizaciones', 'usuarios'];
 
 function scanFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
