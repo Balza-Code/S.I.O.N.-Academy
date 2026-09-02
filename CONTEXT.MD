@@ -16,6 +16,7 @@ This repository implements a high-performance Learning Management System (LMS) f
 ## File Organization
 
 - `src/app/actions/` - Modular server actions by domain.
+- `src/app/admin/` - Protected academic administration panel.
 - `src/app/(auth)/` - Authentication route group.
 - `src/components/` - Pure client-side UI components.
 - `src/db/` - Database initialization and Drizzle schema definitions.
@@ -66,6 +67,14 @@ This `CONTEXT.MD` file should be read by any agent or collaborator opening the r
 
 Se añadió un roadmap accionable y paso-a-paso en: [docs/ROADMAP.md](docs/ROADMAP.md)
 Mantener este `CONTEXT.MD` sincronizado con el roadmap — los agentes deben actualizar aquí los checkpoints diarios.
+
+## Guía de arquitectura
+
+La estructura implementada, los flujos de lectura y mutación, el modelo RBAC, los comandos de verificación y la deuda técnica están documentados en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+Las ideas de experiencia del aprendiz, comunidad, perfil, herramientas de repaso, vista del líder y jerarquía de cursos están recogidas en [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md). Este documento distingue el MVP actual de las evoluciones posteriores.
+
+Para registrar nuevas ideas en futuras sesiones, usa la directriz y el prompt reutilizable de la sección "Directriz para nuevas ideas" de [docs/PRODUCT-VISION.md](docs/PRODUCT-VISION.md). Primero se debe aclarar la necesidad, el flujo y la sensación buscada; después se decide si corresponde al MVP y cómo implementarlo.
 
 ## Seguridad y RBAC
 

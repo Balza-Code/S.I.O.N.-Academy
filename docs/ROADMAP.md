@@ -24,16 +24,23 @@ La plataforma se cimienta sobre una arquitectura monolítica modular de alto ren
 
 - **Fase 1: Infraestructura Base y Persistencia Relacional** — Estatus: Completada.
   - Establecimiento del entorno de ejecución local, interconexión de Drizzle con PostgreSQL, y modelado de organizaciones, iglesias y usuarios.
-- **Fase 2: Gestión de Entidades e Integridad de Datos** — Estatus: En Ejecución.
-  - Formularios interactivos controlados, procesados vía Server Actions con validación Zod y revalidación de caché bajo demanda vía `revalidatePath()`.
-- **Fase 3: Núcleo Académico y Enrutamiento Dinámico (LMS)** — Estatus: En Ejecución / Siguiente Sprint.
-  - Modelado de módulos y lecciones. Rutas dinámicas `/cursos/[id]/page.tsx` con selección explícita de campos y reproductores de video embebidos.
-- **Fase 3.5: Módulo Social, Evidencias en Video y Retroalimentación Comunitaria (Social LMS)** — Estatus: Planificada.
+- **Fase 2: Gestión de Entidades e Integridad de Datos** — Estatus: Parcialmente completada.
+  - Formularios y Server Actions para cursos y lecciones con validación Zod y revalidación vía `revalidatePath()`.
+- **Fase 3: Núcleo Académico y Enrutamiento Dinámico (LMS)** — Estatus: Completada en su núcleo.
+  - Cursos, lecciones ordenadas, progreso por usuario y ruta dinámica `/cursos/[id]` con reproductores embebidos.
+- **Fase 3.5: Módulo Social, Evidencias en Video y Retroalimentación Comunitaria (Social LMS)** — Estatus: Núcleo implementado.
   - Implementación del sistema participativo donde aprendices de distintas congregaciones y distritos publican ejecuciones en video como evidencia práctica de cada lección. Muro comunitario de retroalimentación, revisiones por parte de líderes/profesores y feed de actividad en tiempo real.
-- **Fase 4: Autenticación, Control de Acceso y Seguridad (RBAC)** — Estatus: Planificada.
-  - Sistema de sesiones seguro (Bcrypt), Middleware global y RBAC estricto donde un `APRENDIZ` solo puede publicar evidencias y comentar, mientras que `LIDER` y `ADMIN` pueden evaluar y auditar.
+- **Fase 4: Autenticación, Control de Acceso y Seguridad (RBAC)** — Estatus: En ejecución avanzada.
+  - Sesiones JWT HTTP-only, middleware global, RBAC para cursos/lecciones, organizaciones y gestión de roles restringida a `ADMIN`. Pendiente pruebas E2E.
+  - Checkpoint 2026-09-02: panel `/admin`, CRUD de cursos/lecciones/organizaciones, gestión de roles y auditoría automática RBAC implementados y cubiertos por tests.
 - **Fase 5: Estrategia de Testing y Despliegue Continuo (CI/CD)** — Estatus: Planificada.
   - Pruebas unitarias (Vitest), integración (Testcontainers) y E2E (Playwright).
+
+### Ideas de producto registradas
+
+Las ideas sobre el flujo futuro del aprendiz y la evolución del LMS están documentadas en [docs/PRODUCT-VISION.md](PRODUCT-VISION.md). Incluyen dashboard centrado en cursos y avance, comunidad filtrable por organización, perfil personal, lecciones con teoría y repaso, seguimiento para líderes y prerrequisitos entre cursos.
+
+Durante el MVP se prioriza validar el núcleo: cursos, lecciones, progreso, evidencias y permisos. Las ideas de personalización, herramientas de estudio y jerarquía avanzada quedan registradas para refinamiento posterior.
 
 ## 4. Diseño del Modelo Relacional de Datos (Ampliado)
 El diseño sigue estrictamente la Tercera Forma Normal (3FN). Se integran las nuevas entidades para soportar la capa social:

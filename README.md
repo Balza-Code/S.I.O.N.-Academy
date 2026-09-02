@@ -34,4 +34,25 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# S.I.O.N.-Academy
+# Academia S.I.O.N.
+
+Learning Management System para formación musical en iglesias y comunidades.
+
+## Documentación
+
+- [Guía de estructura de software](docs/ARCHITECTURE.md)
+- [Visión funcional del producto](docs/PRODUCT-VISION.md)
+- [Roadmap de desarrollo](docs/ROADMAP.md)
+- [Reglas de RBAC](docs/RBAC.md)
+- [Contexto para colaboradores](CONTEXT.MD)
+
+## Comandos principales
+
+```bash
+npm run dev
+npm test -- --run
+npm run check:rbac
+npm run build
+```
+
+La aplicación requiere `DATABASE_URL` y `JWT_SECRET`. Redis/Upstash es opcional en desarrollo y obligatorio para un rate limiting compartido en producción.
