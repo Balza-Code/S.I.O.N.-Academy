@@ -1,10 +1,26 @@
 import { db } from '@/db';
 import { cursos, lecciones, progresoLecciones, evidenciasLeccion, comentariosEvidencia, reaccionesEvidencia } from '@/db/schema';
 import { eq, asc, inArray, and } from 'drizzle-orm';
-import { notFound } from 'next/navigation'; 
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { marcarLeccionCompletadaAction } from '@/app/actions/cursos';
 import { subirEvidenciaAction, comentarEvidenciaAction, reaccionEvidenciaAction } from '@/app/actions';
+import { requireSession } from '@/lib/auth';
+
+async function handleSubirEvidencia(formData: FormData) {
+  'use server';
+  await subirEvidenciaAction(formData);
+}
+
+async function handleComentarEvidencia(formData: FormData) {
+  'use server';
+  await comentarEvidenciaAction(formData);
+}
+
+async function handleReaccionEvidencia(formData: FormData) {
+  'use server';
+  await reaccionEvidenciaAction(formData);
+}
 
 export default async function CursoPage({
   params,
@@ -18,11 +34,17 @@ export default async function CursoPage({
   const { leccion: leccionParamId } = await searchParams;
 
   const cursoId = Number(id);
-  const USUARIO_SIMULADO_ID = 24;
 
   if (isNaN(cursoId)) {
     notFound();
   }
+
+  const session = await requireSession().catch(() => null);
+  if (!session) {
+    redirect(`/login?redirect=/cursos/${cursoId}`);
+  }
+
+  const usuarioId = session.userId;
 
   // 2. Buscamos el curso específico
   const [curso] = await db
@@ -62,7 +84,7 @@ export default async function CursoPage({
         .from(progresoLecciones)
         .where(
           and(
-            eq(progresoLecciones.usuarioId, USUARIO_SIMULADO_ID),
+            eq(progresoLecciones.usuarioId, usuarioId),
             inArray(progresoLecciones.leccionId, idsLeccionesCurso)
           )
         )
@@ -131,7 +153,7 @@ export default async function CursoPage({
 
                   {/* FORMULARIO DE MUTACIÓN */}
                   <form action={marcarLeccionCompletadaAction}>
-                    <input type="hidden" name="usuarioId" value={USUARIO_SIMULADO_ID} />
+                    <input type="hidden" name="usuarioId" value={usuarioId} />
                     <input type="hidden" name="leccionId" value={leccionActiva.id} />
                     <input type="hidden" name="cursoId" value={curso.id} />
                     
@@ -170,7 +192,7 @@ export default async function CursoPage({
                           <p className="text-sm text-[#b5b5b5] mb-2">{ev.descripcion}</p>
 
                           <div className="flex items-center gap-3">
-                            <form action={reaccionEvidenciaAction} className="inline">
+                            <form action={handleReaccionEvidencia} className="inline">
                               <input type="hidden" name="evidenciaId" value={ev.id} />
                               <input type="hidden" name="tipo" value="LIKE" />
                               <button className="px-3 py-1 bg-[#c4a484] text-[#1a1a1a] rounded">Like</button>
@@ -185,7 +207,7 @@ export default async function CursoPage({
                               ))}
                             </div>
 
-                            <form action={comentarEvidenciaAction} className="mt-3 flex gap-2">
+                            <form action={handleComentarEvidencia} className="mt-3 flex gap-2">
                               <input type="hidden" name="evidenciaId" value={ev.id} />
                               <input name="contenido" placeholder="Escribe un comentario..." className="flex-1 rounded px-3 py-2 bg-[#111] border border-[#333] text-sm" />
                               <button className="px-3 py-2 bg-[#c4a484] text-[#1a1a1a] rounded">Comentar</button>
@@ -198,7 +220,7 @@ export default async function CursoPage({
 
                   <div className="mt-4 bg-[#171717] p-4 rounded">
                     <h4 className="font-bold text-sm mb-2">Subir evidencia (URL)</h4>
-                    <form action={subirEvidenciaAction} className="flex flex-col gap-2">
+                    <form action={handleSubirEvidencia} className="flex flex-col gap-2">
                       <input type="hidden" name="leccionId" value={leccionActiva.id} />
                       <input name="videoUrl" placeholder="https://youtube.com/..." className="px-3 py-2 rounded bg-[#0f0f0f] border border-[#333] text-sm" />
                       <textarea name="descripcion" placeholder="Descripción (opcional)" className="px-3 py-2 rounded bg-[#0f0f0f] border border-[#333] text-sm" />

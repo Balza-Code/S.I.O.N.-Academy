@@ -15,12 +15,10 @@ export default function LoginForm() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectToParam = searchParams?.get('redirectTo') ?? null;
+  const redirectToParam = searchParams?.get('redirect') ?? searchParams?.get('redirectTo') ?? '/dashboard';
 
 
   async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
-    debugger;
-
     event.preventDefault();
     setErrorGeneral(null);
     setErroresCampos({});

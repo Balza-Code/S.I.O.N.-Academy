@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { db } from '@/db';
+import { evidenciasLeccion, usuarios } from '@/db/schema';
+import { desc, eq, inArray } from 'drizzle-orm';
 import { obtenerSesion } from '@/lib/sessions';
 // Feed moved to dashboard; keep landing minimal for now
 
@@ -36,15 +39,15 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Feed de evidencias recientes */}
+      {/* Feed de evidencias recientes
       <section className="max-w-6xl mx-auto p-8">
         <h3 className="text-2xl font-bold text-[#e4e1d9] mb-4">Feed - Evidencias recientes</h3>
         <div className="space-y-6">
           {/* Server-side fetch: últimas 10 evidencias activas */}
           {/** fetch data inside component render */}
-          <RecentEvidencias />
+          {/* <RecentEvidencias />
         </div>
-      </section>
+      </section> */}
     </main>
   );
 }
@@ -53,7 +56,7 @@ async function RecentEvidencias() {
   const items = await db
     .select()
     .from(evidenciasLeccion)
-    .where(evidenciasLeccion.activo.equals(1))
+    .where(eq(evidenciasLeccion.activo, 1))
     .orderBy(desc(evidenciasLeccion.createdAt))
     .limit(10);
 

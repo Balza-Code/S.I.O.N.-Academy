@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { obtenerSesion } from '@/lib/sessions';
 import { redirect } from 'next/navigation';
+import { logoutAction } from '@/app/actions/auth';
 import { evidenciasLeccion } from '@/db/schema';
 import { desc, inArray } from 'drizzle-orm';
 
@@ -38,6 +39,16 @@ export default async function DashboardPage() {
           <div className="text-right">
             <p className="font-bold text-lg">Hola, {usuario.nombre}</p>
             <p className="text-xs text-[#a8a8a8]">Rol: {usuario.rol}</p>
+            {(usuario.rol === 'ADMIN' || usuario.rol === 'LIDER') && (
+              <Link href="/admin" className="mt-2 inline-block text-xs font-bold text-[#c4a484] hover:text-[#e4e1d9]">
+                Administrar contenido
+              </Link>
+            )}
+            <form action={logoutAction} className="mt-2">
+              <button type="submit" className="text-xs font-bold text-[#a8a8a8] hover:text-red-300">
+                Cerrar sesión
+              </button>
+            </form>
           </div>
         </header>
 
